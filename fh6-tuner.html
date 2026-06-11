@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forza Horizon 6 — Tuning Calculator</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --surface: #0f172a;
+      --surface2: #1a2540;
+      --surface3: #243347;
+      --accent: #2563eb;
+      --accent-light: #60a5fa;
+      --accent-glow: rgba(59,130,246,0.15);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-faint: #4b6080;
+      --border: #1e3a5f;
+      --border-light: #2d4a6a;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #080e1d 0%, #0d1f3c 50%, #080e1d 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(59,130,246,0.4);
+    }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-sub {
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      margin-top: 1px;
+    }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── INPUT PANEL ── */
+    .input-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: sticky;
+      top: 78px;
+    }
+    .panel-head {
+      background: var(--surface2);
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .panel-head h2 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    .panel-body { padding: 18px; }
+
+    /* ── FORM ── */
+    .fsec { margin-bottom: 22px; }
+    .fsec:last-of-type { margin-bottom: 0; }
+    .flabel {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-light);
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+      display: block;
+    }
+    .field { margin-bottom: 10px; }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      padding: 8px 11px;
+      color: var(--text);
+      font-size: 0.88rem;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2360a5fa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── SEGMENTED CONTROLS ── */
+    .seg {
+      display: flex;
+      background: var(--surface2);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .seg input[type="radio"] { display: none; }
+    .seg label {
+      flex: 1;
+      text-align: center;
+      padding: 7px 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-faint);
+      transition: all 0.14s;
+      margin: 0;
+      user-select: none;
+    }
+    .seg input[type="radio"]:checked + label {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── BUTTON ── */
+    .btn-calc {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.18s, transform 0.1s;
+      box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+    }
+    .btn-calc:hover { opacity: 0.9; }
+    .btn-calc:active { transform: scale(0.99); }
+
+    /* ── RESULTS ── */
+    .placeholder {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 40px;
+      text-align: center;
+      color: var(--text-faint);
+    }
+    .placeholder .ico { font-size: 3rem; margin-bottom: 14px; opacity: 0.4; }
+    .placeholder h3 { font-size: 1rem; color: var(--text-dim); margin-bottom: 6px; }
+    .placeholder p { font-size: 0.8rem; }
+
+    .car-banner {
+      background: linear-gradient(135deg, var(--surface2), var(--surface3));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .car-banner-name { font-size: 1.15rem; font-weight: 700; }
+    .car-banner-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 3px; }
+    .badges { display: flex; gap: 7px; }
+    .badge {
+      padding: 3px 11px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── TUNE GRID ── */
+    .tune-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card.full { grid-column: 1 / -1; }
+    .card-head {
+      background: var(--surface2);
+      padding: 9px 15px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-body { padding: 12px 15px; }
+
+    /* ── TUNE ROWS ── */
+    .tr {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tr:last-child { border-bottom: none; padding-bottom: 0; }
+    .tr:first-child { padding-top: 0; }
+    .tl { font-size: 0.78rem; color: var(--text-dim); padding-top: 1px; }
+    .tv {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .tv.good { color: var(--green); }
+    .tv.note { color: var(--accent-light); font-size: 0.75rem; font-weight: 400; max-width: 180px; line-height: 1.4; }
+
+    /* ── SLIDER ROWS ── */
+    .tr-bar {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tr-bar:last-child { border-bottom: none; }
+    .tr-bar:first-child { padding-top: 0; }
+    .tr-bar-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .bar-track {
+      position: relative;
+      height: 4px;
+      background: var(--border-light);
+      border-radius: 2px;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #7c3aed);
+      border-radius: 2px;
+      transition: width 0.45s ease;
+    }
+
+    /* ── NOTE BOX ── */
+    .note-box {
+      background: rgba(59,130,246,0.07);
+      border: 1px solid rgba(59,130,246,0.18);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 0.77rem;
+      color: var(--text-dim);
+      margin-top: 9px;
+      line-height: 1.6;
+    }
+    .note-box strong { color: var(--accent-light); }
+
+    /* ── TIPS ── */
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+    .tip:last-child { border-bottom: none; }
+    .tip-ico { flex-shrink: 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 980px) {
+      main { grid-template-columns: 1fr; }
+      .input-panel { position: static; }
+      .tune-grid { grid-template-columns: 1fr; }
+      .card.full { grid-column: auto; }
+    }
+    @media (max-width: 600px) {
+      main { padding: 14px 10px 50px; gap: 14px; }
+      header { padding: 14px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">🏎</div>
+    <div>
+      <h1>Forza Horizon 6 — Tuning Calculator</h1>
+      <div class="header-sub">Optimal settings for any car, surface, and driving style</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ════════════════ INPUT PANEL ════════════════ -->
+  <aside class="input-panel">
+    <div class="panel-head">
+      <span>⚙️</span>
+      <h2>Car Configuration</h2>
+    </div>
+    <div class="panel-body">
+
+      <div class="fsec">
+        <span class="flabel">Car Info</span>
+        <div class="field">
+          <label>Car Name (optional)</label>
+          <input type="text" id="carName" placeholder="e.g. Ford GT 2005" />
+        </div>
+        <div class="field">
+          <label>PI Class Target</label>
+          <select id="piClass">
+            <option value="D">D Class (100 – 500)</option>
+            <option value="C">C Class (500 – 600)</option>
+            <option value="B">B Class (600 – 700)</option>
+            <option value="A" selected>A Class (700 – 800)</option>
+            <option value="S1">S1 Class (800 – 900)</option>
+            <option value="S2">S2 Class (900 – 998)</option>
+            <option value="X">X Class (999)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Drivetrain</label>
+          <div class="seg">
+            <input type="radio" name="drive" id="d_fwd" value="FWD">
+            <label for="d_fwd">FWD</label>
+            <input type="radio" name="drive" id="d_rwd" value="RWD" checked>
+            <label for="d_rwd">RWD</label>
+            <input type="radio" name="drive" id="d_awd" value="AWD">
+            <label for="d_awd">AWD</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <span class="flabel">Weight &amp; Power</span>
+        <div class="field-row">
+          <div class="field">
+            <label>Weight</label>
+            <input type="number" id="weight" value="3200" min="800" max="9000" />
+          </div>
+          <div class="field">
+            <label>Unit</label>
+            <select id="wUnit">
+              <option value="lbs" selected>lbs</option>
+              <option value="kg">kg</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Front Weight Distribution (%)</label>
+          <input type="number" id="frontDist" value="50" min="20" max="80" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Power (HP)</label>
+            <input type="number" id="power" value="500" min="50" max="3000" />
+          </div>
+          <div class="field">
+            <label>Torque (lb-ft)</label>
+            <input type="number" id="torque" value="400" min="50" max="3000" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Aspiration</label>
+          <select id="asp">
+            <option value="na">Naturally Aspirated</option>
+            <option value="turbo" selected>Turbocharged</option>
+            <option value="sc">Supercharged</option>
+            <option value="twint">Twin Turbo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <span class="flabel">Surface &amp; Style</span>
+        <div class="field">
+          <label>Racing Surface</label>
+          <div class="seg">
+            <input type="radio" name="surf" id="s_road" value="road" checked>
+            <label for="s_road">Road</label>
+            <input type="radio" name="surf" id="s_dirt" value="dirt">
+            <label for="s_dirt">Dirt</label>
+            <input type="radio" name="surf" id="s_rally" value="rally">
+            <label for="s_rally">Rally</label>
+            <input type="radio" name="surf" id="s_xc" value="xc">
+            <label for="s_xc">Cross</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tuning Style</label>
+          <div class="seg">
+            <input type="radio" name="style" id="st_grip" value="grip" checked>
+            <label for="st_grip">Grip</label>
+            <input type="radio" name="style" id="st_drift" value="drift">
+            <label for="st_drift">Drift</label>
+            <input type="radio" name="style" id="st_all" value="allround">
+            <label for="st_all">All-Round</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Has Aero Upgrades</label>
+          <div class="seg">
+            <input type="radio" name="aero" id="a_yes" value="yes" checked>
+            <label for="a_yes">Yes</label>
+            <input type="radio" name="aero" id="a_no" value="no">
+            <label for="a_no">No</label>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">⚡ Calculate Optimal Tune</button>
+    </div>
+  </aside>
+
+  <!-- ════════════════ RESULTS ════════════════ -->
+  <section id="output">
+    <div class="placeholder" id="ph">
+      <div class="ico">🏁</div>
+      <h3>Configure your car and hit Calculate</h3>
+      <p>Fill in your car's stats on the left to generate a complete, optimized tune.</p>
+    </div>
+    <div id="results" style="display:none"></div>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const radio = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const r1 = v => Math.round(v * 10) / 10;
+  const r2 = v => Math.round(v * 100) / 100;
+
+  // ── PI class color palette ──
+  const PI_COLORS = {
+    D:'#9ca3af', C:'#f97316', B:'#22c55e',
+    A:'#3b82f6', S1:'#a855f7', S2:'#ec4899', X:'#ef4444'
+  };
+
+  function calculate() {
+    // ── Read inputs ──
+    const carName  = $('carName').value.trim() || 'Custom Car';
+    const piClass  = $('piClass').value;
+    const drive    = radio('drive');         // FWD / RWD / AWD
+    let   weight   = parseFloat($('weight').value) || 3200;
+    const wUnit    = $('wUnit').value;
+    const frontPct = clamp(parseFloat($('frontDist').value) / 100 || 0.5, 0.2, 0.8);
+    const power    = parseFloat($('power').value) || 500;
+    const asp      = $('asp').value;
+    const surface  = radio('surf');          // road / dirt / rally / xc
+    const style    = radio('style');         // grip / drift / allround
+    const hasAero  = radio('aero') === 'yes';
+
+    const weightLbs = wUnit === 'kg' ? weight * 2.20462 : weight;
+    const rearPct   = 1 - frontPct;
+
+    // ════════════════════════════════════════
+    //  TIRES (PSI)
+    // ════════════════════════════════════════
+    const basePSI = { road:{f:29.5,r:28.0}, dirt:{f:25.0,r:24.0}, rally:{f:27.0,r:26.0}, xc:{f:23.0,r:22.0} }[surface];
+    const wAdj = (weightLbs - 3000) * 0.002;
+    let tireFront = clamp(r1(basePSI.f + wAdj), 18, 40);
+    let tireRear  = clamp(r1(basePSI.r + wAdj), 18, 40);
+    if (style === 'drift') tireRear = clamp(r1(tireRear - 2.0), 18, 40);
+
+    // ════════════════════════════════════════
+    //  ALIGNMENT
+    // ════════════════════════════════════════
+    let cF, cR, tF, tR, caster;
+    if (surface === 'road' || surface === 'rally') {
+      if (style === 'grip') {
+        cF = drive === 'FWD' ? -1.8 : -1.3;
+        cR = drive === 'FWD' ? -0.5 : drive === 'RWD' ? -1.0 : -0.8;
+        tF = drive === 'FWD' ? -0.2 : -0.1;
+        tR = 0.2;
+        caster = 7.0;
+      } else if (style === 'drift') {
+        cF = -4.0; cR = -1.5;
+        tF = 0.3;  tR = -0.2;
+        caster = 6.5;
+      } else {
+        cF = drive === 'FWD' ? -1.5 : -1.0;
+        cR = -0.7; tF = -0.1; tR = 0.2; caster = 6.5;
+      }
+    } else {
+      cF = -0.8; cR = -0.3;
+      tF = 0.1;  tR = 0.1;
+      caster = 5.5;
+    }
+
+    // ════════════════════════════════════════
+    //  SPRINGS (lbs/in)
+    // ════════════════════════════════════════
+    const surfSpring = { road:1.0, rally:0.72, dirt:0.62, xc:0.52 }[surface];
+    const styleSpring = style === 'grip' ? 1.05 : style === 'drift' ? 0.92 : 1.0;
+    let spF = clamp(r1(weightLbs * frontPct * 0.35 * surfSpring * styleSpring), 100, 2000);
+    let spR = clamp(r1(weightLbs * rearPct  * 0.35 * surfSpring * styleSpring), 100, 2000);
+    if (drive === 'RWD') spR = clamp(r1(spR * 1.06), 100, 2000);
+    if (drive === 'FWD') spF = clamp(r1(spF * 1.04), 100, 2000);
+
+    // Ride height (inches)
+    const baseRH = { road:4.5, rally:5.6, dirt:5.9, xc:6.6 }[surface];
+    let rhF = clamp(r1(baseRH - (frontPct - 0.5) * 0.5), 3.9, 7.9);
+    let rhR = clamp(r1(baseRH + (rearPct  - 0.5) * 0.3), 3.9, 7.9);
+    if (style === 'drift') rhF = clamp(r1(rhF - 0.4), 3.9, 7.9);
+
+    // ════════════════════════════════════════
+    //  DAMPING (1 – 20 scale)
+    // ════════════════════════════════════════
+    const dampD = { road:40, rally:35, dirt:31, xc:27 }[surface];
+    let rbF = clamp(r1(spF / dampD), 1, 20);
+    let rbR = clamp(r1(spR / dampD), 1, 20);
+    let bpF = clamp(r1(rbF * 0.65), 1, 20);
+    let bpR = clamp(r1(rbR * 0.65), 1, 20);
+
+    // ════════════════════════════════════════
+    //  ANTI-ROLL BARS (1 – 65 scale)
+    // ════════════════════════════════════════
+    const arbD = { road:11.5, rally:13.5, dirt:15.5, xc:17.5 }[surface];
+    let arbF = clamp(r1(spF / arbD), 1, 65);
+    let arbR = clamp(r1(spR / arbD), 1, 65);
+    if (drive === 'FWD') arbF = clamp(r1(arbF * 1.15), 1, 65);
+    if (drive === 'RWD' && style === 'drift') {
+      arbF = clamp(r1(arbF * 0.78), 1, 65);
+      arbR = clamp(r1(arbR * 1.22), 1, 65);
+    }
+
+    // ════════════════════════════════════════
+    //  DIFFERENTIAL
+    // ════════════════════════════════════════
+    let diff = {};
+    if (drive === 'RWD') {
+      diff.accel = style === 'drift' ? 78 : style === 'grip' ? 30 : 45;
+      diff.decel = style === 'drift' ? 5  : style === 'grip' ? 15 : 10;
+    } else if (drive === 'FWD') {
+      diff.accel = style === 'grip' ? 50 : 35;
+      diff.decel = style === 'grip' ? 25 : 15;
+    } else { // AWD
+      diff.fAccel  = style === 'grip' ? 20 : 30;
+      diff.fDecel  = 20;
+      diff.rAccel  = style === 'grip' ? 45 : 55;
+      diff.rDecel  = 20;
+      diff.center  = style === 'grip' ? 50 : 70;
+    }
+
+    // ════════════════════════════════════════
+    //  BRAKES
+    // ════════════════════════════════════════
+    const brkBal  = drive === 'FWD' ? 55 : drive === 'RWD' ? 52 : 50;
+    const brkPres = 100;
+
+    // ════════════════════════════════════════
+    //  AERO (% of max range)
+    // ════════════════════════════════════════
+    const aeroRec = hasAero ? (
+      style === 'grip'     ? { f:'100% (Max)',  r:'100% (Max)' } :
+      style === 'drift'    ? { f:'55%',         r:'75%'        } :
+                             { f:'65%',         r:'82%'        }
+    ) : null;
+
+    // ════════════════════════════════════════
+    //  GEARING – Final Drive
+    // ════════════════════════════════════════
+    const fdRange = {
+      D:{lo:4.5,hi:5.5}, C:{lo:3.8,hi:4.8}, B:{lo:3.4,hi:4.2},
+      A:{lo:2.9,hi:3.7}, S1:{lo:2.6,hi:3.3}, S2:{lo:2.2,hi:3.0}, X:{lo:1.8,hi:2.6}
+    }[piClass];
+    const pwRatio = power / (weightLbs / 2000);
+    const fdRaw = fdRange.hi - (pwRatio / 600) * (fdRange.hi - fdRange.lo);
+    const finalDrive = r2(clamp(fdRaw, fdRange.lo, fdRange.hi));
+
+    // ════════════════════════════════════════
+    //  RENDER
+    // ════════════════════════════════════════
+    $('ph').style.display = 'none';
+    const el = $('results');
+    el.style.display = 'block';
+
+    el.innerHTML = `
+      <div class="car-banner">
+        <div>
+          <div style="font-size:.68rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Optimized Tune For</div>
+          <div class="car-banner-name">${esc(carName)}</div>
+          <div class="car-banner-meta">${drive} · ${capFirst(surface)} · ${capFirst(style)}</div>
+        </div>
+        <div class="badges">
+          <span class="badge" style="background:${PI_COLORS[piClass]};color:#fff">${piClass}</span>
+          <span class="badge" style="background:var(--surface3);border:1px solid var(--border-light);color:var(--text-dim)">${drive}</span>
+        </div>
+      </div>
+
+      <div class="tune-grid">
+
+        <!-- TIRES -->
+        <div class="card">
+          <div class="card-head">🔴 Tires</div>
+          <div class="card-body">
+            ${row('Front Pressure', tireFront + ' PSI')}
+            ${row('Rear Pressure',  tireRear  + ' PSI')}
+          </div>
+        </div>
+
+        <!-- GEARING -->
+        <div class="card">
+          <div class="card-head">⚙️ Gearing</div>
+          <div class="card-body">
+            ${bar('Final Drive', finalDrive, fdRange.lo, fdRange.hi)}
+            ${row('Range for ' + piClass, fdRange.lo + ' – ' + fdRange.hi)}
+            ${row('Individual Gears', 'Optimize after final drive is set', 'note')}
+          </div>
+        </div>
+
+        <!-- ALIGNMENT -->
+        <div class="card">
+          <div class="card-head">📐 Alignment</div>
+          <div class="card-body">
+            ${row('Front Camber', cF + '°')}
+            ${row('Rear Camber',  cR + '°')}
+            ${row('Front Toe',    tF + '°')}
+            ${row('Rear Toe',     tR + '°')}
+            ${row('Caster',       caster + '°')}
+          </div>
+        </div>
+
+        <!-- ANTI-ROLL BARS -->
+        <div class="card">
+          <div class="card-head">〰️ Anti-Roll Bars</div>
+          <div class="card-body">
+            ${bar('Front ARB', arbF, 1, 65)}
+            ${bar('Rear ARB',  arbR, 1, 65)}
+            <div class="note-box">
+              <strong>Balance:</strong> ${
+                drive === 'FWD' ? 'Stiffen front ARB or soften rear to reduce push/understeer.' :
+                drive === 'RWD' ? 'Stiffen front ARB to sharpen turn-in without inducing snap oversteer.' :
+                'AWD: balance ARBs evenly; shift rear-stiffer for rotation.'
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- SPRINGS -->
+        <div class="card">
+          <div class="card-head">🔧 Springs</div>
+          <div class="card-body">
+            ${bar('Front Rate', spF + ' lb/in', 100, 2000, spF)}
+            ${bar('Rear Rate',  spR + ' lb/in', 100, 2000, spR)}
+            ${row('Front Ride Height', rhF + '"')}
+            ${row('Rear Ride Height',  rhR + '"')}
+          </div>
+        </div>
+
+        <!-- DAMPING -->
+        <div class="card">
+          <div class="card-head">📉 Damping</div>
+          <div class="card-body">
+            ${bar('Front Rebound', rbF, 1, 20)}
+            ${bar('Front Bump',    bpF, 1, 20)}
+            ${bar('Rear Rebound',  rbR, 1, 20)}
+            ${bar('Rear Bump',     bpR, 1, 20)}
+          </div>
+        </div>
+
+        <!-- BRAKES -->
+        <div class="card">
+          <div class="card-head">🛑 Brakes</div>
+          <div class="card-body">
+            ${bar('Balance (Front %)', brkBal, 30, 70)}
+            ${bar('Pressure', brkPres, 0, 200)}
+            <div class="note-box">
+              <strong>Tip:</strong> Shift balance rearward by 2–3% to improve rotation under trail-braking.
+            </div>
+          </div>
+        </div>
+
+        <!-- DIFFERENTIAL -->
+        <div class="card">
+          <div class="card-head">🔄 Differential</div>
+          <div class="card-body">
+            ${ drive === 'AWD' ? `
+              ${bar('Front Accel %',   diff.fAccel, 0, 100)}
+              ${bar('Front Decel %',   diff.fDecel, 0, 100)}
+              ${bar('Rear Accel %',    diff.rAccel, 0, 100)}
+              ${bar('Rear Decel %',    diff.rDecel, 0, 100)}
+              ${bar('Center Balance', diff.center,  0, 100)}
+            ` : `
+              ${bar('Accel %', diff.accel, 0, 100)}
+              ${bar('Decel %', diff.decel, 0, 100)}
+            `}
+          </div>
+        </div>
+
+        ${ aeroRec ? `
+        <!-- AERO -->
+        <div class="card full">
+          <div class="card-head">💨 Aerodynamics</div>
+          <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>${row('Front Downforce', aeroRec.f, 'good')}</div>
+            <div>${row('Rear Downforce',  aeroRec.r, 'good')}</div>
+          </div>
+          <div style="padding:0 15px 12px">
+            <div class="note-box">
+              <strong>Aero tip:</strong> ${
+                style === 'grip'     ? 'Max downforce maximizes cornering at the cost of top speed — ideal for twisty tracks.' :
+                style === 'drift'    ? 'Moderate rear downforce aids stability without overly fighting rotation.' :
+                'Fine-tune per course: more rear for chicanes, less for long straights.'
+              }
+            </div>
+          </div>
+        </div>
+        ` : '' }
+
+        <!-- TIPS -->
+        <div class="card full">
+          <div class="card-head">💡 Tuning Notes &amp; Tips</div>
+          <div class="card-body" style="padding:0 15px 14px">
+            ${ buildTips(drive, surface, style, asp) }
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  // ── Helpers ──────────────────────────────────────
+
+  function row(label, value, cls = '') {
+    return `<div class="tr">
+      <span class="tl">${label}</span>
+      <span class="tv ${cls}">${value}</span>
+    </div>`;
+  }
+
+  // bar(label, displayOrNum, loOrHi, hi, optionalNum)
+  // Overloads:
+  //   bar(label, numericValue, lo, hi)           → displays the number, bar from lo to hi
+  //   bar(label, stringDisplay, lo, hi, numVal)  → string display, bar uses numVal
+  function bar(label, valOrStr, lo, hi, numVal) {
+    let display, num;
+    if (numVal !== undefined) {
+      display = valOrStr;
+      num = numVal;
+    } else {
+      display = valOrStr;
+      num = parseFloat(valOrStr);
+    }
+    const pct = clamp(((num - lo) / (hi - lo)) * 100, 0, 100);
+    return `<div class="tr-bar">
+      <div class="tr-bar-top">
+        <span class="tl">${label}</span>
+        <span class="tv">${display}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }
+
+  function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function buildTips(drive, surface, style, asp) {
+    const tips = [];
+
+    // Drivetrain
+    if (drive === 'FWD') {
+      tips.push(['⚠️', 'FWD tends to understeer. If pushing wide, reduce front spring rate by 5–10% or soften front ARB.']);
+      tips.push(['🔄', 'Trail-brake (light brake pressure mid-corner) to rotate a FWD car through the apex.']);
+    } else if (drive === 'RWD') {
+      tips.push(['🎯', 'If snapping on corner exit, reduce rear diff accel % by 5–10 points or stiffen front springs slightly.']);
+      tips.push(['💪', 'High-power RWD: try a slightly lower diff accel (25–35%) for progressive rear traction rather than spin.']);
+    } else {
+      tips.push(['🏔️', 'AWD: shift center diff toward rear (60–70%) for neutral or mild oversteer; toward front for push-understeer stability.']);
+      tips.push(['⚡', 'AWD excels on dirt and cross-country — lower tire pressures and maximum ride height for max traction.']);
+    }
+
+    // Aspiration
+    if (asp === 'turbo' || asp === 'twint') {
+      tips.push(['💨', 'Turbo lag means power arrives in a rush. Soften the rear diff accel slightly and consider a shorter final drive.']);
+    } else if (asp === 'sc') {
+      tips.push(['⚙️', 'Supercharger delivers instant torque. Raise diff decel % to prevent rear lockup under off-throttle braking.']);
+    }
+
+    // Surface
+    if (surface === 'dirt') {
+      tips.push(['🌧️', 'Dirt: run the lowest tire pressure possible without losing feel. Soft springs absorb ruts and bumps.']);
+      tips.push(['📐', 'Dirt: reduce camber to near 0° — lateral grip from camber is wasted on loose surfaces.']);
+    } else if (surface === 'xc') {
+      tips.push(['🌿', 'Cross-Country: prioritize maximum ride height and ultra-soft suspension over cornering precision.']);
+      tips.push(['🛞', 'XC: all-terrain tires trump tuning — make sure your tire compound upgrade is maxed before tuning.']);
+    } else if (surface === 'rally') {
+      tips.push(['🛤️', 'Rally: split the difference between road and dirt settings. Ride height ~5–6″, moderate spring stiffness.']);
+    } else {
+      tips.push(['🏁', 'Road: lower ride height reduces center of gravity and improves high-speed stability.']);
+    }
+
+    // Style
+    if (style === 'drift') {
+      tips.push(['🔥', 'Drift: initiate with the handbrake (LB/L1) or lift-off oversteer. Countsteer angle is managed by diff accel %.']);
+      tips.push(['🏎️', 'Drift: front camber of −3° to −5° keeps front tires loaded during deep opposite-lock angles.']);
+    }
+
+    // General
+    tips.push(['📊', 'Tuning order: tires → aero → gearing → springs → dampers → alignment → differential.']);
+    tips.push(['🔁', 'Oversteer fix: soften rear springs, soften rear ARB, reduce rear diff accel. Understeer: reverse these.']);
+    tips.push(['🧪', 'Test each change on the same section of track. Change one variable at a time for clean comparisons.']);
+
+    return tips.map(([ico, text]) => `
+      <div class="tip"><span class="tip-ico">${ico}</span><span>${text}</span></div>
+    `).join('');
+  }
+
+  // Auto-run on load with defaults
+  window.addEventListener('load', () => setTimeout(calculate, 100));
+</script>
+</body>
+</html>
